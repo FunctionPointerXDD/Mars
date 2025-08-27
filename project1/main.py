@@ -29,7 +29,7 @@ def print_log_file_and_out_list() -> list:
         
     return log_list
 
-def save_json_file(log_dict: dict, JSON_FILE='./mission_computer_main.json') -> None:
+def save_json_file(log_dict: dict, JSON_FILE='./mission_computer_main.json'):
 	with open(JSON_FILE, 'w', encoding='utf-8') as f:
 		json.dump(log_dict, f, ensure_ascii=False, indent=4)
 

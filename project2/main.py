@@ -6,6 +6,7 @@ import csv
 import pickle
 
 CSV_FILE = './mars_base/Mars_Base_Inventory_List.csv'
+CSV_HEADER = ('Substance', 'Weight (g/cm³)', 'Specific Gravity', 'Strength', 'Flammability')
 
 def is_number(s: str) -> bool:
     try:
@@ -25,16 +26,16 @@ def print_csv_file_and_out_list() -> list:
         header = buf.strip('\n').split(',')
         if (
             len(header) < 5
-            or header[0] != "Substance"
-            or header[1] != "Weight (g/cm³)"
-            or header[2] != "Specific Gravity"
-            or header[3] != "Strength"
-            or header[4] != "Flammability"
+            or header[0] != CSV_HEADER[0]
+            or header[1] != CSV_HEADER[1]
+            or header[2] != CSV_HEADER[2]
+            or header[3] != CSV_HEADER[3]
+            or header[4] != CSV_HEADER[4]
         ):
             raise ValueError("Invalid csv format!")
 
         while True:
-            # print row file by line
+            # print raw file
             print(buf, end='')
             buf = f.readline()
             if not buf:
@@ -57,11 +58,18 @@ def print_csv_file_and_out_list() -> list:
 def save_csv_file(csv_list: list, CSV_FILE='./Mars_Base_Inventory_danger.csv'):
     with open(CSV_FILE, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
+        writer.writerow(CSV_HEADER)
         writer.writerows(csv_list)
+
+### bonus ###
+def save_binary_file(csv_list: list, CSV_FILE='./Mars_Base_Inventory_List.bin'):
+    with open(CSV_FILE, 'wb') as f:
+        csv_list.insert(0, CSV_HEADER)
+        pickle.dump(csv_list, f) # pickle -> 파이썬 고유 방식으로 바이트 단위로 전환(직렬화)
+        csv_list.pop(0)
 
 ### bonus ### -> C와 호환되게 만드는 법 (정신건강에 나쁘다.)
 #import struct
-
 # def save_binary_file(csv_list: list, CSV_FILE='./Mars_Base_Inventory_List.bin'):
 #     with open(CSV_FILE, 'wb') as f:
 #         for row in csv_list:
@@ -69,11 +77,6 @@ def save_csv_file(csv_list: list, CSV_FILE='./Mars_Base_Inventory_danger.csv'):
 #             for col in row:
 #                 encoded_row.append(str(col).encode('utf-8')[:10])
 #             f.write(struct.pack('10s10s10s10s10s', *encoded_row))
-
-### bonus ###
-def save_binary_file(csv_list: list, CSV_FILE='./Mars_Base_Inventory_List.bin'):
-    with open(CSV_FILE, 'wb') as f:
-        pickle.dump(csv_list, f)
 
 def read_binary_file(BIN_FILE='./Mars_Base_Inventory_List.bin'):
     with open(BIN_FILE, 'rb') as f:
@@ -88,11 +91,10 @@ def main():
         sorted_list = sorted(csv_list, key=lambda x: x[4], reverse=True)
         filtered_list = [row for row in sorted_list if float(row[4]) > 0.7]
         save_csv_file(filtered_list)
-        print('--- Sorted by Flammability and over 0.7---')
+        print('\n--- Sorted by Flammability and over 0.7---')
         for row in filtered_list:
             print(row)
 
-        ##bonus##
         save_binary_file(sorted_list)
         read_binary_file()
 

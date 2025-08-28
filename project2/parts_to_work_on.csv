@@ -1,0 +1,49 @@
+items,tab1,tab2,tab3,avg
+Glass,32,35,82,49.667
+Rebar,35,67,46,49.333
+Stone,37,12,6,18.333
+Cement,3,91,15,36.333
+Wallpaper,9,70,5,28.000
+Ceiling material,25,1,25,17.000
+Drywall,96,18,18,44.000
+Non-ferrous metal,31,85,23,46.333
+Steel frame,10,53,29,30.667
+Soil,77,29,30,45.333
+Steel frame structure,28,54,47,43.000
+Asphalt shingles,63,7,42,37.333
+Concrete blocks,26,64,24,38.000
+Fasteners,12,43,77,44.000
+Metal mesh,34,73,22,43.000
+Brick mortar,34,28,37,33.000
+Door frame,99,2,3,34.667
+Concrete mixer,34,70,9,37.667
+Ladder,57,8,79,48.000
+Jackhammer,21,3,36,20.000
+Ceiling grid,47,82,16,48.333
+Brickwork,50,6,50,35.333
+Blinds,12,94,25,43.667
+Joint compound,5,30,23,19.333
+Wire mesh,61,49,35,48.333
+Radiator,24,53,34,37.000
+Drywall screws,60,11,35,35.333
+Hydraulic push,62,34,27,41.000
+Wire cable,60,40,2,34.000
+Block wall,88,14,2,34.667
+Reinforced concrete block,22,2,14,12.667
+Outlet box,41,4,7,17.333
+Wooden ladder,35,33,76,48.000
+Gypsum base,8,14,28,16.667
+Building paper,18,24,59,33.667
+Countertop,9,20,21,16.667
+Projection base,23,19,91,44.333
+Exterior brick,12,6,31,16.333
+Door frame,86,17,17,40.000
+Building trim,3,35,39,25.667
+Ceramic tile,8,59,64,43.667
+Projection window,98,21,21,46.667
+Hasp,27,27,12,22.000
+Door stop,91,17,18,42.000
+Brick wall,83,1,49,44.333
+Air filter,29,57,45,43.667
+Tile joint material,44,29,11,28.000
+Stair runner,49,59,2,36.667

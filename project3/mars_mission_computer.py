@@ -21,22 +21,25 @@ MARS_ENV = {
    5: "mars_base_internal_oxygen"
 }
 
-def burn_cpu(sec: int):
+STOP = threading.Event()
+
+# 0.1초 씩 깨면서 자기..
+def light_sleep(sec: int) -> str:
+    for _ in range(sec * 10):
+        if STOP.is_set():
+            return 'STOP'
+        time.sleep(0.1)
+    return ''
+
+def burn_cpu(sec: int = 2):
     end = time.time() + sec
     x = 0
-    while time.time() < end:
+    while time.time() < end and not STOP.is_set():
         x += sum(i * i for i in range(10000))
 
 class DummySensor:
     def __init__(self):
-        self.env_values = {
-            MARS_ENV[0] : 0.0,
-            MARS_ENV[1] : 0.0,
-            MARS_ENV[2] : 0.0,
-            MARS_ENV[3] : 0.0,
-            MARS_ENV[4] : 0.0,
-            MARS_ENV[5] : 0.0,
-        }
+        self.env_values = {MARS_ENV[i]: 0.0 for i in range(6)}
     
     def set_env(self):
         self.env_values[MARS_ENV[0]] = round(random.uniform(18, 30), 0)
@@ -71,19 +74,20 @@ class MissionComputer:
     def get_sensor_data(self):
         try:
             saved_log :List[Dict[str, float]] = []
-            avg_fmt = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             sec = 0
-            while True:
+            while not STOP.is_set():
                 ds = DummySensor()
                 ds.set_env()
                 self.env_values = ds.get_env()
-                saved_log.append(self.env_values)
+                saved_log.append(dict(self.env_values))
                 print(json.dumps(self.env_values, indent=4, ensure_ascii=False))
 
-                time.sleep(5.0)
+                if light_sleep(5) == 'STOP':
+                    break
                 sec += 5
                 if sec == 300:
                     recs = len(saved_log)
+                    avg_fmt = [0.0] * len(MARS_ENV)
                     for i in range(recs):
                         for j in range(len(MARS_ENV)):
                             avg_fmt[j] += saved_log[i][MARS_ENV[j]]
@@ -101,48 +105,94 @@ class MissionComputer:
 
         except KeyboardInterrupt:
             print('\nSystem stoped….')
+        except Exception as e:
+            print(f"[sensor] Error: {e}")
+        finally:
+            print('[sensor] stop')
     
     def get_mission_computer_info(self):
         try:
-            info :dict = {}
-            info['운영체계'] = platform.system()
-            info['운영체계 버전'] = platform.version()
-            info['CPU의 타입'] = platform.processor()
-            info['CPU의 코어 수'] = os.cpu_count()
-            info['메모리의 크기'] = psutil.virtual_memory().total
+            while True:
+                info :dict = {}
+                info['운영체계'] = platform.system()
+                info['운영체계 버전'] = platform.version()
+                info['CPU의 타입'] = platform.processor()
+                info['CPU의 코어 수'] = os.cpu_count()
+                info['메모리의 크기'] = psutil.virtual_memory().total
 
-            print(json.dumps(info, indent=4, ensure_ascii=False))
+                print(json.dumps(info, indent=4, ensure_ascii=False))
+                if light_sleep(20) == 'STOP':
+                    break
+
+        except KeyboardInterrupt:
+            print('\nSystem stoped….')
         except Exception as e:
             print(f"Error: {e}")
+        finally:
+            print('[info] stop')
 
     def get_mission_computer_load(self):
         try:
-            load :dict = {}
+            while True:
+                load :dict = {}
 
-            _tmp = [0] * (10 ** 8) # 메모리 사용량 올리기
-            load['메모리 실시간 사용량'] = psutil.virtual_memory().percent
+                _tmp = [0] * (10 ** 7) # 메모리 사용량 올리기
+                load['메모리 실시간 사용량'] = psutil.virtual_memory().percent
 
-            psutil.cpu_percent(interval=None)
-            t = threading.Thread(target=burn_cpu, args=(2,), daemon=True)
-            t.start()
-            load['CPU 실시간 사용량'] = psutil.cpu_percent(interval=1)
-            t.join()
+                psutil.cpu_percent(interval=None)
+                t = threading.Thread(target=burn_cpu, args=(2,), daemon=True)
+                t.start()
+                time.sleep(0.05) # 살짝 지연
+                load['CPU 실시간 사용량'] = psutil.cpu_percent(interval=1.0)
 
-            print(json.dumps(load, indent=4, ensure_ascii=False))
+                print(json.dumps(load, indent=4, ensure_ascii=False))
+                if light_sleep(20) == 'STOP':
+                    break
+
+        except KeyboardInterrupt:
+            print('\nSystem stoped….')
         except Exception as e:
             print(f"Error: {e}")
+        finally:
+            print('[load] stop')
 
 
 def main():
-    # ds = DummySensor()
-    # ds.set_env()
-    # print(ds.get_env())
-    # RunComputer = MissionComputer()
-    # RunComputer.get_sensor_data()
-    runComputer = MissionComputer()
-    runComputer.get_mission_computer_info()
-    runComputer.get_mission_computer_load()
+    try:
+        runComputer = MissionComputer()
+        t1 = threading.Thread(target=runComputer.get_mission_computer_info)
+        t2 = threading.Thread(target=runComputer.get_mission_computer_load)
+        t3 = threading.Thread(target=runComputer.get_sensor_data)
+        for t in (t1, t2, t3):
+            t.start()
 
+        while any(t.is_alive() for t in (t1, t2, t3)):
+            for t in (t1, t2, t3):
+                t.join()
+
+    except KeyboardInterrupt:
+        print('\nMain Thread stoped by Ctrl + C')
+        STOP.set()
+        for t in (t1, t2, t3):
+            t.join()
+    except Exception as e:
+        print(f"Error: {e}")
+        STOP.set()
+        for t in (t1, t2, t3):
+            t.join()
 
 if __name__ == '__main__':
     main()
+
+
+## TEST ##
+# def main():
+#     ds = DummySensor()
+#     ds.set_env()
+#     print(ds.get_env())
+#     RunComputer = MissionComputer()
+#     RunComputer.get_sensor_data()
+#     runComputer = MissionComputer()
+#     runComputer.get_mission_computer_info()
+#     runComputer.get_mission_computer_load()
+#     runComputer.get_sensor_data()

@@ -10,6 +10,8 @@ import platform
 import os
 import psutil
 import threading
+from multiprocessing import Process
+import multiprocessing as mp
 from typing import List, Dict
 
 MARS_ENV = {
@@ -21,7 +23,11 @@ MARS_ENV = {
    5: "mars_base_internal_oxygen"
 }
 
+# 스레드 이벤트 객체 (STOP signal 관리용도)
 STOP = threading.Event()
+
+# 프로세스 이벤트 객체 
+#STOP = mp.Event()
 
 # 0.1초 씩 깨면서 자기..
 def light_sleep(sec: int) -> str:
@@ -136,7 +142,7 @@ class MissionComputer:
             while True:
                 load :dict = {}
 
-                _tmp = [0] * (10 ** 7) # 메모리 사용량 올리기
+                _tmp = bytearray(100 * 1024 * 1024) # 100MB
                 load['메모리 실시간 사용량'] = psutil.virtual_memory().percent
 
                 psutil.cpu_percent(interval=None)
@@ -157,7 +163,8 @@ class MissionComputer:
             print('[load] stop')
 
 
-def main():
+# multi-thread simulation ##
+def multi_thread():
     try:
         runComputer = MissionComputer()
         t1 = threading.Thread(target=runComputer.get_mission_computer_info)
@@ -181,8 +188,44 @@ def main():
         for t in (t1, t2, t3):
             t.join()
 
+
+## multi-processing simulation ##
+def multi_process():
+    try:
+        runComputer1 = MissionComputer()
+        runComputer2 = MissionComputer()
+        runComputer3 = MissionComputer()
+        p1 = Process(target=runComputer1.get_mission_computer_info)
+        p2 = Process(target=runComputer2.get_mission_computer_load)
+        p3 = Process(target=runComputer3.get_sensor_data)
+
+        for p in (p1, p2, p3):
+            p.start()
+
+        while any(p.is_alive() for p in (p1, p2, p3)):
+            for p in (p1, p2, p3):
+                p.join()
+
+    except KeyboardInterrupt:
+        print('\nMain Process stoped by Ctrl + C')
+        STOP.set()
+        for p in (p1, p2, p3):
+            p.join()
+        for p in (p1, p2, p3):
+            if p.is_alive():
+                p.terminate()
+    except Exception as e:
+        print(f"Error: {e}")
+        STOP.set()
+        for p in (p1, p2, p3):
+            p.join()
+        for p in (p1, p2, p3):
+            if p.is_alive():
+                p.terminate()
+
 if __name__ == '__main__':
-    main()
+    multi_thread()
+    #multi_process()
 
 
 ## TEST ##

@@ -39,7 +39,7 @@ def burn_cpu(sec: int = 2):
 
 class DummySensor:
     def __init__(self):
-        self.env_values = {MARS_ENV[i]: 0.0 for i in range(6)}
+        self.env_values :dict = {MARS_ENV[i]: 0.0 for i in range(6)}
     
     def set_env(self):
         self.env_values[MARS_ENV[0]] = round(random.uniform(18, 30), 0)

@@ -24,10 +24,10 @@ MARS_ENV = {
 }
 
 # 스레드 이벤트 객체 (STOP signal 관리용도)
-STOP = threading.Event()
+#STOP = threading.Event()
 
 # 프로세스 이벤트 객체 
-#STOP = mp.Event()
+STOP = mp.Event()
 
 # 0.1초 씩 깨면서 자기..
 def light_sleep(sec: int) -> str:
@@ -173,9 +173,8 @@ def multi_thread():
         for t in (t1, t2, t3):
             t.start()
 
-        while any(t.is_alive() for t in (t1, t2, t3)):
-            for t in (t1, t2, t3):
-                t.join()
+        for t in (t1, t2, t3):
+            t.join()
 
     except KeyboardInterrupt:
         print('\nMain Thread stoped by Ctrl + C')
@@ -202,9 +201,8 @@ def multi_process():
         for p in (p1, p2, p3):
             p.start()
 
-        while any(p.is_alive() for p in (p1, p2, p3)):
-            for p in (p1, p2, p3):
-                p.join()
+        for p in (p1, p2, p3):
+            p.join()
 
     except KeyboardInterrupt:
         print('\nMain Process stoped by Ctrl + C')
@@ -224,8 +222,8 @@ def multi_process():
                 p.terminate()
 
 if __name__ == '__main__':
-    multi_thread()
-    #multi_process()
+    # multi_thread()
+    multi_process()
 
 
 ## TEST ##
